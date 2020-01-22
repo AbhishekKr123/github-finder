@@ -1,26 +1,43 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { Component } from 'react';
+import Navbar from './components/layout/Navbar';
+import Users from './components/users/Users';
+import Search from './components/users/Search';
+import axios from 'axios';
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+export default class App extends Component {
+  state = {
+    users: [],
+    loading: false
+  };
 
-export default App;
+  async componentDidMount() {
+    this.setState({ loading: true });
+    const res = await axios.get(
+      `https://api.github.com/users?client_id=${process.env.REACT_APP_GITHUB_CLIENT_ID}&client_search=${process.env.REACT_APP_GITHUB_CLIENT_SECRET}`
+    );
+    this.setState({ users: res.data, loading: false });
+  }
+
+  // Search Github Users
+  searchUsers = async text => {
+    this.setState({ loading: true });
+    const res = await axios.get(
+      `https://api.github.com/search/users?q=${text}&client_id=${process.env.REACT_APP_GITHUB_CLIENT_ID}&client_search=${process.env.REACT_APP_GITHUB_CLIENT_SECRET}`
+    );
+    this.setState({ users: res.data.items, loading: false });
+  };
+
+  render() {
+    const { loading, users } = this.state;
+    return (
+      <div className="App">
+        <Navbar title="Github Finder" icon="fab fa-github" />
+        <div className="container">
+          <Search searchUsers={this.searchUsers} />
+          <Users loading={loading} users={users} />
+        </div>
+      </div>
+    );
+  }
+}
